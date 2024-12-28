@@ -7,4 +7,7 @@ export default defineConfig({
   strictPort: true, // Ensures the port isn't switched if unavailable
   host: '0.0.0.0', // Optional: Allows access from external devices
   open: true, // Optional: Automatically opens the browser
+  server: {
+    port: 3001, // Replace with your desired port number
+  },
 })
