@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect} from "react";
 import { HexColorPicker } from "react-colorful";
 import Slider from 'rc-slider';
 import penImg from '/assets/pen.svg'
@@ -23,60 +23,119 @@ const Img=styled.img`
 
 function Canvas() {
     const canvasRef = useRef(null);
+    const ctxRef = useRef(null);
+    const [strokes, setStrokes] = useState([]);
+    const [currentStroke, setCurrentStroke] = useState(null);
     const [isDrawing, setIsDrawing]=useState(false);
     const [isErasing, setIsErasing]=useState(false);
     const [cursorStyle,setCursorStyle] = useState(null);
     const [context, setContext] = useState(null);
     const [color,setColor]=useState("Black");
     const [width,setWidth]=useState(1);
-    const [undoStack, setUndoStack] = useState([]); // Stack for undo
-  const [redoStack, setRedoStack] = useState([]); // Stack for redo
+    const [undoStack, setUndoStack] = useState([]);
+    const [redoStack, setRedoStack] = useState([]); 
+
+    useEffect(() => {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctxRef.current = ctx;
+    }, []);
 
 
-    const saveCanvasState = () => {
-        const canvas = canvasRef.current;
-        const dataURL = canvas.toDataURL(); // Get canvas state as base64
-        setUndoStack((prevStack) => [...prevStack, dataURL]); // Save the state in the undo stack
-        setRedoStack([]); // Clear redo stack when new action is performed
-      };
-    
-      const loadCanvasState = (state) => {
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext("2d");
-        const img = new Image();
-        img.src = state;
-        img.onload = () => {
-          ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas before redrawing
-          ctx.drawImage(img, 0, 0); // Draw the image (previous state) on the canvas
-        };
-      };
+
 
     const startDrawing = (e) => {
-        const ctx = canvasRef.current.getContext('2d');
-        setContext(ctx);
-        ctx.lineWidth = width;
-        ctx.strokeStyle = color;
-        ctx.beginPath();
-        ctx.moveTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
+        const {offsetX, offsetY} = e.nativeEvent;
         setIsDrawing(true);
-        
+        const newStroke = {
+            author: 'user',
+            type: 'line',
+            color: color,
+            width: width,
+            points: [{x: offsetX, y: offsetY}],
+        };
+        setCurrentStroke(newStroke);
     };
 
     const draw = (e) => {
         if (!isDrawing) return;
+        const {offsetX, offsetY} = e.nativeEvent;
+        const newPoint = {x: offsetX, y: offsetY};
+        setCurrentStroke((prevStroke) => {
+          if (prevStroke) {
+              return {
+                  ...prevStroke,
+                  points: [...prevStroke.points, newPoint],
+              };
+          }
+          return prevStroke;
+      });
 
-        context.lineTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
-        context.stroke();
+      const ctx=ctxRef.current;
+      ctx.strokeStyle=color;
+      ctx.lineWidth=width;
+      ctx.beginPath();
+      const points = currentStroke.points;
+      if (points.length > 0) {
+          ctx.moveTo(points[points.length - 1].x, points[points.length - 1].y);
+          ctx.lineTo(offsetX, offsetY);
+          ctx.stroke();
+      }
 
     };
 
     const stopDrawing = () => {
-        if (isDrawing) {
-            context.closePath();
-            setIsDrawing(false);
-            saveCanvasState();
-        }
-    }
+      if (currentStroke) {
+          setStrokes((prevStrokes) => [...prevStrokes, currentStroke]);
+          setCurrentStroke(null);
+      }
+      setIsDrawing(false);
+    };
+
+    const clearCanvas = () => {
+      const ctx = ctxRef.current;
+      ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+      setStrokes([]);
+    };
+
+    const redrawCanvas = () => {
+      const ctx = ctxRef.current;
+      ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+
+      strokes.forEach((stroke) => {
+          ctx.strokeStyle = stroke.color;
+          ctx.lineWidth = stroke.lineWidth;
+          ctx.beginPath();
+          stroke.points.forEach((point, index) => {
+              if (index === 0) {
+                  ctx.moveTo(point.x, point.y);
+              } else {
+                  ctx.lineTo(point.x, point.y);
+              }
+          });
+          ctx.stroke();
+      });
+    };
+
+    const erase = (e) => {
+      if (!isErasing) return;
+
+      const { offsetX, offsetY } = e.nativeEvent;
+      const eraserRadius = 25;
+
+      const updatedStrokes = strokes.filter((stroke) => {
+          const isNear = stroke.points.every((point) => {
+              const distance = Math.hypot(point.x - offsetX, point.y - offsetY);
+              return distance > eraserRadius; // Keep strokes farther than the eraser radius
+          });
+          return isNear;
+      });
+
+      setStrokes(updatedStrokes);
+      redrawCanvas(updatedStrokes);
+    };
 
     const handleSlideBarChange = (val) => {
         setWidth(val);
@@ -84,28 +143,18 @@ function Canvas() {
 
     
       const undo = () => {
-        if (undoStack.length === 0) return;
-        const lastState = undoStack[undoStack.length - 1];
-        const newUndoStack = undoStack.slice(0, undoStack.length - 1);
-        setUndoStack(newUndoStack);
-        setRedoStack([lastState, ...redoStack]); // Move to redo stack
-        if (newUndoStack.length > 0) {
-          loadCanvasState(newUndoStack[newUndoStack.length - 1]); // Load the previous state
-        } else {
-          // If no more undo states, clear the canvas
-          const canvas = canvasRef.current;
-          const ctx = canvas.getContext("2d");
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
+        if (strokes.length === 0) return;
+        redoStack.push(strokes[strokes.length - 1]); // Add the last stroke to redo stack
+        setStrokes((prevStroke) => { 
+          return prevStroke.slice(0, -1); // Remove the last
+        }); // Clear the strokes
+
       };
     
       const redo = () => {
         if (redoStack.length === 0) return;
-        const lastRedoState = redoStack[0];
-        const newRedoStack = redoStack.slice(1);
-        setRedoStack(newRedoStack);
-        setUndoStack([...undoStack, lastRedoState]); // Move back to undo stack
-        loadCanvasState(lastRedoState); // Load the redo state
+        setStrokes((prevStroke) => [...prevStroke, redoStack[redoStack.length - 1]]); // Add the last stroke from redo stack
+        setRedoStack((prevStack) => prevStack.slice(0, -1)); // Remove the last stroke from redo stack
       };
     
       const saveCanvas = () => {
@@ -119,7 +168,6 @@ function Canvas() {
 
       const handleEraser = () => {
         setIsErasing(true);
-        setColor("white");
       };
 
       const habdlePen = () => { 
@@ -129,6 +177,9 @@ function Canvas() {
       };
 
 
+      useEffect(() => {
+        redrawCanvas();
+      }, [strokes]);
     
 
     return (
@@ -160,7 +211,7 @@ function Canvas() {
                 style = {{border: '1px solid black',
                   cursor: {cursorStyle},
                 }}
-                onMouseDown={startDrawing}
+                onMouseDown={isErasing ? erase : startDrawing}
                 onMouseMove={draw}
                 onMouseUp={stopDrawing}
                 onMouseLeave={stopDrawing}>
