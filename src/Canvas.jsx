@@ -1,7 +1,9 @@
 import React, { useRef, useState } from "react";
 import { HexColorPicker } from "react-colorful";
 import Slider from 'rc-slider';
-import penImg from '/assets/pen.svg'
+import penImg from '/assets/pen.svg';
+import Undo from '/assets/undo.svg';
+import Redo from '/assets/redo.svg';
 import 'rc-slider/assets/index.css';
 import styled from "styled-components";
 
@@ -137,8 +139,8 @@ function Canvas() {
                 <button className="active" onClick={habdlePen}>
                   <Img src={penImg} alt="pen to draw"/>
                 </button>
-                <button onClick={undo}>Undo</button>
-                <button onClick={redo}>Redo</button>
+                <button onClick={undo}><Img src={Undo} alt="Undo"/></button>
+                <button onClick={redo}><Img src={Redo} alt="Redo"/></button>
                 <button onClick={handleEraser}>Eraser</button>
                 <button onClick={saveCanvas}>Save</button>
             </StyledDiv>
