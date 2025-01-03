@@ -1,10 +1,10 @@
 import React, { useRef, useState, useEffect } from "react";
 import { HexColorPicker } from "react-colorful";
 import Slider from 'rc-slider';
-import penImg from '/assets/pen.svg';
-import Undo from '/assets/undo.svg';
-import Redo from '/assets/redo.svg';
-import 'rc-slider/assets/index.css';
+// import penImg from '/assets/pen.svg';
+import Undo from '../assets/undo.svg';
+import Redo from '../assets/redo.svg';
+// import 'rc-slider/assets/index.css';
 import styled from "styled-components";
 import useCanvas from '../hooks/useCanvas';
 import ToolBar from "./ToolBar";
