@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: process.env.GITHUB_PAGES ? '/repository-name/' : './',    // Sets the base URL for the project(for github build)
+  base: process.env.GITHUB_PAGES ? '/Board/' : './',    // Sets the base URL for the project(for github build)
   // base: './',                                                  // Sets the base URL for the project(for local build)
   server: {
     port: 8001,       // Desired port number
