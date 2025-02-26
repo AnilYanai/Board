@@ -19,15 +19,6 @@ function useCanvas() {
   const [redoStack, setRedoStack] = useState([]);
 
   useEffect(() => {
-    // const canvas = canvasRef.current;
-    // console.log("canvas", canvas);
-    // console.log("canvasRef", canvasRef); 
-    // console.log("ctxRef", ctxRef); 
-    // const ctx = canvas.getContext('2d');
-    // ctx.lineCap = 'round';
-    // ctx.lineJoin = 'round';
-    // ctxRef.current = ctx;
-    // console.log("redered");
     if (canvasRef.current) {
       const canvas = canvasRef.current;
       console.log("canvas", canvas);
@@ -93,45 +84,6 @@ function useCanvas() {
       ctx.lineTo(offsetX, offsetY);
       ctx.stroke();
     }
-
-    // if (isErasing) return;
-
-    // const { offsetX, offsetY } = e.nativeEvent;
-    // const newPoint = { x: offsetX, y: offsetY };
-    // // if (points.length > 0) {
-    // //   ctx.beginPath();
-    // //   ctx.moveTo(points[points.length - 2].x, points[points.length - 2].y);
-    // //   ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
-    // //   ctx.stroke();
-    // // }
-  
-    // // Use a local variable to ensure you have the most up-to-date stroke
-    // let newStroke;
-    // setCurrentStroke((prevStroke) => {
-    //   if (prevStroke) {
-    //     newStroke = {
-    //       ...prevStroke,
-    //       points: [...prevStroke.points, newPoint],
-    //     };
-    //     return newStroke;
-    //   }
-    //   return prevStroke;
-    // });
-  
-    // if (!newStroke) return;
-  
-    // const ctx = ctxRef.current;
-    // ctx.strokeStyle = newStroke.color;
-    // ctx.lineWidth = newStroke.width;
-  
-    // // Draw the line incrementally
-    // const points = newStroke.points;
-    // if (points.length > 0) {
-    //   ctx.beginPath();
-    //   ctx.moveTo(points[points.length - 2].x, points[points.length - 2].y);
-    //   ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
-    //   ctx.stroke();
-    // }
   };
 
   const stopDrawing = () => {
@@ -228,9 +180,7 @@ function useCanvas() {
     console.log("isErasing", isErasing);
     return isErasing ? erase : startDrawing;
   };
-
- 
-
+  
   return {
     canvasRef,
     startDrawing,
