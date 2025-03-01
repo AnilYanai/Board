@@ -58,10 +58,12 @@ function Canvas() {
                     // onTouchStart={getDrawingAction}      //this only pass the reference of the getDrawingAction so in runtime it will not work
                     // onMouseDown={getDrawingAction}        
                     onTouchStart={(e) => getDrawingAction()(e)}  // Call getDrawingAction and then execute the function it returns
-                    onMouseDown={(e) => getDrawingAction()(e)}
+                    
                     // onTouchStart={isErasing ? erase : startDrawing}  //eraser not working 
                     // onMouseDown={isErasing ? erase : startDrawing}   //eraser not working
                     // onTouchMove={draw}
+                    // onMouseDown={startDrawing}
+                    onMouseDown={(e) => getDrawingAction()(e)}
                     onMouseMove={draw}
                     onMouseLeave={stopDrawing}
                     // onTouchEnd={stopDrawing}

@@ -1,8 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
-import { HexColorPicker } from "react-colorful";
-import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
-import styled from "styled-components";
+
 
 function useCanvas() {
   const canvasRef = useRef(null);
@@ -45,6 +43,7 @@ function useCanvas() {
     console.log("offsetX", offsetX);
     console.log("offsetY", offsetY);
     setIsErasing(false);
+    setIsDrawing(true);
     const newStroke = {
       author: 'user',
       type: 'line',
@@ -58,7 +57,7 @@ function useCanvas() {
 
   const draw = (e) => {
     console.log("isErasing(inside draw)", isErasing);
-    if (isDrawing) return;
+    if (!isDrawing) return; 
     console.log("isErasing(inside draw2)", isErasing);
     const { offsetX, offsetY } = e.nativeEvent;
     const newPoint = { x: offsetX, y: offsetY };
@@ -106,7 +105,8 @@ function useCanvas() {
 
     strokes.forEach((stroke) => {
       ctx.strokeStyle = stroke.color;
-      ctx.lineWidth = stroke.lineWidth;
+      ctx.lineWidth = stroke.width;
+      console.log("linewidth ====>", stroke.width);
       ctx.beginPath();
       stroke.points.forEach((point, index) => {
         if (index === 0) {
