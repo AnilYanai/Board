@@ -45,7 +45,8 @@ function Canvas() {
         handleEraser,
         handlePen,
         setColor,
-        getDrawingAction } = useCanvas();
+        getDrawingAction ,
+        width} = useCanvas();
     console.log("Canvas2");
 
     return (
@@ -81,6 +82,7 @@ function Canvas() {
                     setColor={setColor}
                     color={color}
                     handleSlideBarChange={handleSlideBarChange}
+                    width={width}                   
                 />
             </MainPanel>
         </div>

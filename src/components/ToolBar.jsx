@@ -37,6 +37,7 @@ function ToolBar({
     setColor,
     color,
     handleSlideBarChange,
+    width,
 }) {
     return (
         <div >
@@ -48,14 +49,18 @@ function ToolBar({
                     <Img src={eraserIcon} alt="Eraser" />
                 </button>
                 
-                <Popup trigger={
+                <Popup 
+                trigger={
                     <button >
                         <Img src={adjustmentIcon} alt="adjustment" />
                     </button>
-                } position="top center">
+                } 
+                position="top center"
+                >
                     <StyledSlider
                         min={1}
                         max={100}
+                        defaultValue={width}
                         onChange={handleSlideBarChange}
                         draggableTrack={true}
                     ></StyledSlider>

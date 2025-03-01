@@ -138,6 +138,7 @@ function useCanvas() {
   };
 
   const handleSlideBarChange = (val) => {
+    console.log("side bar value:==>", val);
     setWidth(val);
   };
 
@@ -198,7 +199,7 @@ function useCanvas() {
     width,
     setWidth,
     cursorStyle,
-    getDrawingAction
+    getDrawingAction,
   };
 };
 
