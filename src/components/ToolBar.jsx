@@ -1,4 +1,3 @@
-// import React from 'react';
 import colorIcon from '../assets/colorIcon.svg';
 import eraserIcon from '../assets/eraserIcon.svg';
 import penImg from '../assets/pen.svg';
@@ -7,12 +6,17 @@ import styled from 'styled-components';
 import Popup from 'reactjs-popup';
 import { HexColorPicker } from "react-colorful";
 import Slider from 'rc-slider';
+import 'rc-slider/assets/index.css';
+import { TOOLS } from '../constants/tools';
+import {toolStore} from '../store/toolStore';
+import {eraser} from '../toolHandlers/eraser';
+import {pen} from '../toolHandlers/pen';
 
-// import 'rc-slider/assets/index.css';
+
 const StyledDiv = styled.div`
-    & button.active{ 
-        border : 1px solid red;
-    }
+    // & button.active{ 
+    //     border : 1px solid red;
+    // }
 
     position: fixed;
     z-index: 10;
@@ -20,6 +24,9 @@ const StyledDiv = styled.div`
     left: 50%;
     top: 90%;
     transform: translate(-50%, 0%);
+    background-color: white;
+    padding: 10px;
+    display: flex;
 `
 const Img = styled.img`
   width : 15px;
@@ -31,21 +38,25 @@ const StyledSlider = styled(Slider)`
     background-color: black;
 `
 
-function ToolBar({
-    handleEraser,
-    handlePen,
-    setColor,
-    color,
-    handleSlideBarChange,
-    width,
-}) {
+function ToolBar() {
+
+    console.log("ToolBar Component");
+    
+    const  toolColor = toolStore(state => state.toolColor);
+    const  toolSize = toolStore(state => state.toolSize);
+
+    const setToolSize = toolStore.getState().setToolSize; 
+    const setToolColor = toolStore.getState().setToolColor; 
+    const setTool = toolStore.getState().setTool; 
+    const setToolHandler = toolStore.getState().setToolHandlers;
+    
     return (
         <div >
             <StyledDiv>
-                <button className="active" onClick={handlePen}>
+                <button className="active" onClick={()=>{setTool(TOOLS.PEN);setToolHandler(pen)}}>
                     <Img src={penImg} alt="pen to draw" />
                 </button>
-                <button onClick={handleEraser}>
+                <button onClick={()=>{setTool(TOOLS.ERASER);setToolHandler(eraser)}}>
                     <Img src={eraserIcon} alt="Eraser" />
                 </button>
                 
@@ -60,8 +71,8 @@ function ToolBar({
                     <StyledSlider
                         min={1}
                         max={100}
-                        defaultValue={width}
-                        onChange={handleSlideBarChange}
+                        defaultValue={toolSize}
+                        onChange={setToolSize}
                         draggableTrack={true}
                     ></StyledSlider>
                 </Popup>
@@ -73,7 +84,7 @@ function ToolBar({
                         </button>
                     }
                     position="top center">
-                    <HexColorPicker color={color} onChange={setColor} />
+                    <HexColorPicker color={toolColor} onChange={setToolColor} />
                 </Popup>
             </StyledDiv>
         </div>

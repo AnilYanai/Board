@@ -1,11 +1,12 @@
 import Undo from '../assets/undo.svg';
 import Redo from '../assets/redo.svg';
 import styled from "styled-components";
+import {useActionBar} from '../hooks/useActionBar';
 
 const StyledDiv = styled.div`
-    & button.active{ 
-        border : 1px solid red;
-    }
+    // & button.active{ 
+    //     border : 1px solid red;
+    // }
 
     position: fixed;
     z-index: 10;
@@ -13,18 +14,19 @@ const StyledDiv = styled.div`
     right: 1%;
     bottom: 90%;
     transform: translate(-50%, 0%);
+    background-color: white;
+    padding: 10px;
+    display: flex;
 `
 const Img = styled.img`
   width : 15px;
   height : 15px;
 `
 
-
-function ActionBar({
-    undo,
-    redo,
-    saveCanvas
-}) {
+function ActionBar() {
+    console.log("ActionBar Component");
+    const {undo, redo, saveCanvas} = useActionBar();
+    // console.log("1");
     return (
         <div>
             <StyledDiv>
