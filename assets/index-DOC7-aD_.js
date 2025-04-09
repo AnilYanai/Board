@@ -101,4 +101,4 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
     height: 100vh;
     width: 100vw;
     overflow: hidden;
-`;function Ay(){return console.log("CanvasPage"),Re.jsx("div",{children:Re.jsxs(Fy,{children:[Re.jsx($y,{}),Re.jsx(Dy,{}),Re.jsx(Ty,{})]})})}function jy(){return Re.jsxs(Mm,{children:[Re.jsx(ap,{path:"/",element:Re.jsx(Ay,{})}),"  //need to add a home page ,for temporarily i added canvas as stating point"]})}console.log=()=>{},console.warn=()=>{},console.error=()=>{};A0.createRoot(document.getElementById("root")).render(Re.jsx(Jm,{children:Re.jsx(jy,{})}));
+`;function Ay(){return console.log("CanvasPage"),Re.jsx("div",{children:Re.jsxs(Fy,{children:[Re.jsx($y,{}),Re.jsx(Dy,{}),Re.jsx(Ty,{})]})})}function jy(){return Re.jsxs(Mm,{children:[Re.jsx(ap,{path:"/",element:Re.jsx(Ay,{})}),"  //need to add a home page ,for temporarily i added canvas as stating point"]})}A0.createRoot(document.getElementById("root")).render(Re.jsx(Jm,{children:Re.jsx(jy,{})}));
