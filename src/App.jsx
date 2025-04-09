@@ -3,10 +3,10 @@ import CanvasPage from "./pages/CanvasPage";
 import './App.css'
 
 function App() {
-  
+  // need to add a home page ,for temporarily i added canvas as stating point
   return (
     <Routes>
-      <Route path="/" element={<CanvasPage/>} />  //need to add a home page ,for temporarily i added canvas as stating point
+      <Route path="/" element={<CanvasPage/>} />  
     </Routes>
   )
 }
