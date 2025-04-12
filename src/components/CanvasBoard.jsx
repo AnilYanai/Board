@@ -5,7 +5,7 @@ import useDrawingActions from '../hooks/useDrawingActions';
 
 
 const StyledCanvas = styled.canvas`
-    background-color: white;
+    background-color: #f1f1f1;
     border: 1px solid black;
 `
 

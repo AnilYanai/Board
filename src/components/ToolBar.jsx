@@ -11,22 +11,14 @@ import { TOOLS } from '../constants/tools';
 import {toolStore} from '../store/toolStore';
 import {eraser} from '../toolHandlers/eraser';
 import {pen} from '../toolHandlers/pen';
+import { useEffect } from 'react';
 
 
 const StyledDiv = styled.div`
-    // & button.active{ 
-    //     border : 1px solid red;
-    // }
-
     position: fixed;
-    z-index: 10;
-    align-items: center;
     left: 50%;
     top: 90%;
     transform: translate(-50%, 0%);
-    background-color: white;
-    padding: 10px;
-    display: flex;
 `
 const Img = styled.img`
   width : 15px;
@@ -49,10 +41,15 @@ function ToolBar() {
     const setToolColor = toolStore.getState().setToolColor; 
     const setTool = toolStore.getState().setTool; 
     const setToolHandler = toolStore.getState().setToolHandlers;
+
+    useEffect(() => {
+        setTool(TOOLS.PEN);
+        setToolHandler(pen);
+    }, []);
     
     return (
         <div >
-            <StyledDiv>
+            <StyledDiv className="soft-corner-container">
                 <button className="active" onClick={()=>{setTool(TOOLS.PEN);setToolHandler(pen)}}>
                     <Img src={penImg} alt="pen to draw" />
                 </button>

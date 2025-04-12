@@ -13,6 +13,7 @@ export const useActionBar = () => {
     const getRedoStack = historyStore.getState().getRedoStack; 
     //if i access zustand store values using .getState() will not re-render the component when the value changes.
 
+    
     const undo = () => {
         console.log("undo function called");
         console.log(getStrokes().length);
