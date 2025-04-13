@@ -15,7 +15,7 @@ const Img = styled.img`
 `
 
 function ActionBar() {
-    console.log("ActionBar Component");
+    // console.log("ActionBar Component");
     const { undo, redo, saveCanvas } = useActionBar();
     // console.log("1");
     return (

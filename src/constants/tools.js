@@ -5,4 +5,5 @@ export const TOOLS = {
     LINE: "line",
     RECTANGLE: "rectangle",
     CIRCLE: "circle",
+    PAN: "pan",
 };

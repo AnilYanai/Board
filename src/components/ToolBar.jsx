@@ -2,6 +2,7 @@ import colorIcon from '../assets/colorIcon.svg';
 import eraserIcon from '../assets/eraserIcon.svg';
 import penImg from '../assets/pen.svg';
 import adjustmentIcon from '../assets/size-adjustment.svg';
+import panImg from '../assets/panIcon.svg';
 import styled from 'styled-components';
 import Popup from 'reactjs-popup';
 import { HexColorPicker } from "react-colorful";
@@ -11,6 +12,7 @@ import { TOOLS } from '../constants/tools';
 import {toolStore} from '../store/toolStore';
 import {eraser} from '../toolHandlers/eraser';
 import {pen} from '../toolHandlers/pen';
+import { pan } from '../toolHandlers/pan';
 import { useEffect } from 'react';
 
 
@@ -32,7 +34,7 @@ const StyledSlider = styled(Slider)`
 
 function ToolBar() {
 
-    console.log("ToolBar Component");
+    // console.log("ToolBar Component");
     
     const  toolColor = toolStore(state => state.toolColor);
     const  toolSize = toolStore(state => state.toolSize);
@@ -50,7 +52,10 @@ function ToolBar() {
     return (
         <div >
             <StyledDiv className="soft-corner-container">
-                <button className="active" onClick={()=>{setTool(TOOLS.PEN);setToolHandler(pen)}}>
+                <button onClick={()=>{setTool(TOOLS.PAN);setToolHandler(pan)}}>
+                    <Img src={panImg} alt="Pan" />
+                </button>
+                <button onClick={()=>{setTool(TOOLS.PEN);setToolHandler(pen)}}>
                     <Img src={penImg} alt="pen to draw" />
                 </button>
                 <button onClick={()=>{setTool(TOOLS.ERASER);setToolHandler(eraser)}}>

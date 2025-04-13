@@ -23,7 +23,7 @@ export const eraser = {
         });
         strokeToDelete.status = "inactive"; // Mark the stroke as deleted
         strokeToDelete = JSON.parse(JSON.stringify(strokeToDelete)); // Create a deep copy of the stroke to avoid mutating the original object
-        console.log("strokeToDelete", strokeToDelete);
+        // console.log("strokeToDelete", strokeToDelete);
         if (strokeToDelete) {
             strokeToDelete.status = "deleted";
             setStrokes([...getStrokes(), strokeToDelete]);

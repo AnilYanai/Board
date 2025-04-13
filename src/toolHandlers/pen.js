@@ -60,7 +60,7 @@ export const pen = {
     ctx.lineWidth = getToolSize();
     ctx.beginPath();
     const points = currentStroke.points;
-    console.log("points", points);
+    // console.log("points", points);
     if (points.length > 0) {
       ctx.moveTo(points[points.length - 1].x, points[points.length - 1].y);
       ctx.lineTo(offsetX, offsetY);
@@ -75,7 +75,7 @@ export const pen = {
       setStrokes([...getStrokes(), currentStroke]);
       setCurrentStroke(null);
     }
-    console.log("strokes after stop drawing", getStrokes());
+    // console.log("strokes after stop drawing", getStrokes());
   },
 
   drawStroke: (ctx, stroke) => {

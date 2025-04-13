@@ -5,7 +5,7 @@ import { toolStore } from "../store/toolStore";
 import { TOOLS } from "../constants/tools";
 
 function useDrawingActions() {
-  console.log("useDrawingActions Hook");
+  // console.log("useDrawingActions Hook");
   const triggerRender = canvasStore(state => state.triggerRender); //this will cause re-render because it subscibes to the state changes in useffect
   const canvasRef = canvasStore(state => state.canvasRef); //to access zustand state it will cause re-render of the component
 
@@ -19,8 +19,8 @@ function useDrawingActions() {
 
 
   useLayoutEffect(() => {
-    console.log("inside useDrawingActions useEffect");
-    console.log("canvasRef", canvasRef);
+    // console.log("inside useDrawingActions useEffect");
+    // console.log("canvasRef", canvasRef);
     if (!canvasRef) return;
     redrawCanvas();
   }, [triggerRender]);
@@ -58,7 +58,7 @@ function useDrawingActions() {
       return alreadyLoadedTool.current.get(toolType); // Return cached tool handler if already loaded
     }
 
-    console.log("Loaded tool", alreadyLoadedTool);
+    // console.log("Loaded tool", alreadyLoadedTool);
     const toolPath = `../toolHandlers/${toolType}.js`;
     try {
       const toolModuleResult = await toolModule[toolPath]();

@@ -3,7 +3,7 @@ import { canvasStore } from '../store/canvasStore';
 
 export const useActionBar = () => {
 
-    console.log("useActionBar Hook");
+    // console.log("useActionBar Hook");
 
     const setStrokes = historyStore.getState().setStrokes; 
     const setRedoStack = historyStore.getState().setRedoStack;
@@ -15,11 +15,11 @@ export const useActionBar = () => {
 
     
     const undo = () => {
-        console.log("undo function called");
-        console.log(getStrokes().length);
+        // console.log("undo function called");
+        // console.log(getStrokes().length);
         
         if (getStrokes().length === 0) return;
-        console.log("undo function called");
+        // console.log("undo function called");
         const lastStroke = getStrokes()[getStrokes().length - 1];
 
         setRedoStack([...getRedoStack(), lastStroke]); // Add to redoStack
@@ -28,7 +28,7 @@ export const useActionBar = () => {
     };
 
     const redo = () => {
-        console.log("redo function called");
+        // console.log("redo function called");
         if (getRedoStack().length === 0) return;
         // Get the last redo stroke
         const lastRedo = getRedoStack()[getRedoStack().length - 1];
@@ -40,7 +40,7 @@ export const useActionBar = () => {
     };
 
     const saveCanvas = () => {
-        console.log("saveCanvas function called");
+        // console.log("saveCanvas function called");
         const canvas = getCanvasRef(); // Get the canvas reference from Zustand store
         const dataURL = canvas.toDataURL(); // Convert the canvas to a base64 image
         const link = document.createElement("a");

@@ -14,7 +14,7 @@ const MainPanel = styled.div`
 
 function CanvasPage() {
     
-    console.log("CanvasPage");
+    // console.log("CanvasPage");
 
     return (
         <div>
