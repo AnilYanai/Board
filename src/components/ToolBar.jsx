@@ -3,6 +3,7 @@ import eraserIcon from '../assets/eraserIcon.svg';
 import penImg from '../assets/pen.svg';
 import adjustmentIcon from '../assets/size-adjustment.svg';
 import panImg from '../assets/panIcon.svg';
+import selectImg from '../assets/selectIcon.svg';
 import styled from 'styled-components';
 import Popup from 'reactjs-popup';
 import { HexColorPicker } from "react-colorful";
@@ -13,6 +14,7 @@ import {toolStore} from '../store/toolStore';
 import {eraser} from '../toolHandlers/eraser';
 import {pen} from '../toolHandlers/pen';
 import { pan } from '../toolHandlers/pan';
+import { selection } from '../toolHandlers/selection';
 import { useEffect } from 'react';
 
 
@@ -52,6 +54,9 @@ function ToolBar() {
     return (
         <div >
             <StyledDiv className="soft-corner-container">
+                <button onClick={()=>{setTool(TOOLS.SELECT);setToolHandler(selection)}}>
+                    <Img src={selectImg} alt="Select" />
+                </button>
                 <button onClick={()=>{setTool(TOOLS.PAN);setToolHandler(pan)}}>
                     <Img src={panImg} alt="Pan" />
                 </button>

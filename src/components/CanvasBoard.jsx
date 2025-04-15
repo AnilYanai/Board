@@ -40,7 +40,7 @@ function CanvasBoard() {
     
     const canvasReference = useRef(null);
 
-    const canvasWidth = 4000; // Set the desired width of the canvas
+    const canvasWidth = 6000; // Set the desired width of the canvas
     const canvasHeight = 4000; // Set the desired height of the canvas
 
     useLayoutEffect(() => {

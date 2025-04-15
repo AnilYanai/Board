@@ -9,7 +9,14 @@ function useDrawingActions() {
   const triggerRender = canvasStore(state => state.triggerRender); //this will cause re-render because it subscibes to the state changes in useffect
   const canvasRef = canvasStore(state => state.canvasRef); //to access zustand state it will cause re-render of the component
 
-  const [currentStroke, setCurrentStroke] = useState(null); //it will act like a common memory for mouse events
+  // const [currentStroke, setCurrentStroke] = useState(null); //it will act like a common memory for mouse events
+  const currentStroke = useRef(null); //useRef will not cause re-render of the component
+  const setCurrentStroke = (newStroke) => {
+    currentStroke.current = newStroke; // Update the current stroke reference
+  }
+  const getCurrentStroke = () => {
+    return currentStroke.current; // Get the current stroke reference
+  }
 
   const getStrokes = historyStore.getState().getStrokes;
   const getToolHandlers = toolStore.getState().getToolHandlers;
@@ -72,21 +79,21 @@ function useDrawingActions() {
   const mouseDownHandler = (e) => {
     const toolHandlers = getToolHandlers(); // Get the current tool handlers from the store
     if (toolHandlers.onMouseDown) {
-      toolHandlers.onMouseDown(e, currentStroke, setCurrentStroke); // Call the onMouseDown handler of the current tool
+      toolHandlers.onMouseDown(e, getCurrentStroke, setCurrentStroke); // Call the onMouseDown handler of the current tool
     }
   }
 
   const mouseMoveHandler = (e) => {
     const toolHandlers = getToolHandlers(); // Get the current tool handlers from the store
     if (toolHandlers.onMouseMove) {
-      toolHandlers.onMouseMove(e, currentStroke, setCurrentStroke); // Call the onMouseMove handler of the current tool
+      toolHandlers.onMouseMove(e, getCurrentStroke, setCurrentStroke); // Call the onMouseMove handler of the current tool
     }
   }
 
   const mouseUpHandler = (e) => {
     const toolHandlers = getToolHandlers(); // Get the current tool handlers from the store
     if (toolHandlers.onMouseUp) {
-      toolHandlers.onMouseUp(e, currentStroke, setCurrentStroke); // Call the onMouseUp handler of the current tool
+      toolHandlers.onMouseUp(e, getCurrentStroke, setCurrentStroke); // Call the onMouseUp handler of the current tool
     }
   }
 

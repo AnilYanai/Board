@@ -1,7 +1,7 @@
 import { canvasStore } from "../store/canvasStore";
 
 export const pan = {
-    onMouseDown: (e, currentStroke, setCurrentStroke) => {
+    onMouseDown: (e, getCurrentStroke,setCurrentStroke) => {
         const { clientX, clientY } = e.nativeEvent;
         // Get the canvas wrapper directly from the Zustand store
         const wrapper = canvasStore.getState().getCanvasRef().parentElement;
@@ -21,9 +21,9 @@ export const pan = {
         }
     },
 
-    onMouseMove: (e, currentStroke, setCurrentStroke) => {
+    onMouseMove: (e, getCurrentStroke, setCurrentStroke) => {
         if (e.buttons !== 1) return; // Check if the left mouse button is pressed
-        if (!currentStroke.lastX || !currentStroke.lastY) return; // Ensure we have a starting point
+        if (!getCurrentStroke().lastX || !getCurrentStroke().lastY) return; // Ensure we have a starting point
 
         const { clientX, clientY } = e.nativeEvent;
 
@@ -32,12 +32,12 @@ export const pan = {
 
         if (wrapper) {
             // Calculate the delta between the previous mouse position and the current one
-            const deltaX = clientX - currentStroke.lastX;
-            const deltaY = clientY - currentStroke.lastY;
+            const deltaX = clientX - getCurrentStroke().lastX;
+            const deltaY = clientY - getCurrentStroke().lastY;
 
             // Update the scroll position directly based on the delta
-            wrapper.scrollLeft = currentStroke.scrollLeft - deltaX;
-            wrapper.scrollTop = currentStroke.scrollTop - deltaY;
+            wrapper.scrollLeft = getCurrentStroke().scrollLeft - deltaX;
+            wrapper.scrollTop = getCurrentStroke().scrollTop - deltaY;
 
             // Update the last mouse position
             setCurrentStroke({
@@ -53,8 +53,8 @@ export const pan = {
         }
     },
 
-    onMouseUp: (e, currentStroke, setCurrentStroke) => {
+    onMouseUp: (e,getCurrentStroke,setCurrentStroke) => {
         setCurrentStroke(null); // Clear the stored mouse position
-        console.log("Pan ended");
+        // console.log("Pan ended");
     }
 };
