@@ -7,9 +7,11 @@ import CanvasBoard from "../components/CanvasBoard";
 
 const MainPanel = styled.div`
     display: flex;
+    padding: 0;
+    margin: 0;
     height: 100vh;
     width: 100vw;
-    overflow: hidden;
+    overflow: auto;
 `
 
 function CanvasPage() {

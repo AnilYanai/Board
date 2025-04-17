@@ -4,7 +4,7 @@ import { canvasStore } from "../store/canvasStore";
 export const selection = {
     onMouseDown: (e, getCurrentStroke, setCurrentStroke) => {
         if (e.button !== 0) return; // Only execute if the left mouse button is pressed
-        const {clientX,clientY, offsetX, offsetY, shiftKey } = e.nativeEvent;
+        const {offsetX, offsetY, shiftKey } = e.nativeEvent;
         const getStrokes = historyStore.getState().getStrokes;
 
         const selectionRadius = 25;
@@ -20,13 +20,15 @@ export const selection = {
         let newSelection;
         if (selectedStroke) {
             if (shiftKey) {
+                // console.log("Shift key pressed");
                 if (!getCurrentStroke()) {
                     newSelection = [selectedStroke];
                 } else {
-                    const alreadySelected = getCurrentStroke().find(
+                    // console.log("Current strokes:", getCurrentStroke().selectedStrokes);
+                    const alreadySelected = getCurrentStroke().selectedStrokes.find(
                         (s) => s.id === selectedStroke.id
                     );
-                    newSelection = alreadySelected ? getCurrentStroke() : [...getCurrentStroke(), selectedStroke];
+                    newSelection = alreadySelected ? getCurrentStroke().selectedStrokes : [...getCurrentStroke().selectedStrokes, selectedStroke];
                 }
             } else {
                 newSelection = [selectedStroke];
@@ -36,17 +38,17 @@ export const selection = {
         // setCurrentStroke(newSelection); 
         setCurrentStroke({
             selectedStrokes: newSelection,
-            lastX: clientX,
-            lastY: clientY,
+            lastX: offsetX,
+            lastY: offsetY,
           });
         console.log("Current strokes:(in mouseDown)", getCurrentStroke());
     },
 
     onMouseMove: (e, getCurrentStroke, setCurrentStroke) => {
         if(e.buttons !== 1) return; // Only execute if the left mouse button is pressed
-        const { clientX, clientY } = e.nativeEvent;
-        const deltaX = clientX - getCurrentStroke().lastX;
-        const deltaY = clientY - getCurrentStroke().lastY;
+        const { offsetX, offsetY } = e.nativeEvent;
+        const deltaX = offsetX - getCurrentStroke().lastX;
+        const deltaY = offsetY - getCurrentStroke().lastY;
 
         const forceUpdate = canvasStore.getState().forceUpdate;
         getCurrentStroke().selectedStrokes?.forEach((stroke) => {
@@ -57,8 +59,8 @@ export const selection = {
         });
         setCurrentStroke({
             ...getCurrentStroke(),
-            lastX: clientX,
-            lastY: clientY,
+            lastX: offsetX,
+            lastY: offsetY,
         });
         console.log("Current strokes(in mouseMovement):", getCurrentStroke());
         forceUpdate(); // Trigger a re-render of the canvas
