@@ -1,3 +1,5 @@
+'use client';
+
 import { useRef, useEffect, useLayoutEffect, useCallback, useState } from "react";
 import styled from "styled-components";
 import { canvasStore } from "../store/canvasStore";
@@ -31,8 +33,8 @@ function CanvasBoard() {
   });
 
   const [dimensions, setDimensions] = useState({
-    width: window.innerWidth,
-    height: window.innerHeight,
+    width: typeof window !== "undefined" ? window.innerWidth : 1920,
+    height: typeof window !== "undefined" ? window.innerHeight : 1080,
   });
 
   const setCanvasRef = canvasStore((state) => state.setCanvasRef);
@@ -49,21 +51,27 @@ function CanvasBoard() {
     touchEndHandler,
   } = useDrawingActions();
 
+  const useIsomorphicLayoutEffect =
+    typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
   // Resize handler to adjust canvas size dynamically to the viewport
   const handleResize = useCallback(() => {
-    setDimensions({
-      width: window.innerWidth,
-      height: window.innerHeight,
-    });
-    forceUpdate();
+    if (typeof window !== "undefined") {
+      setDimensions({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+      forceUpdate();
+    }
   }, [forceUpdate]);
 
   useEffect(() => {
+    handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [handleResize]);
 
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     setCanvasRef(canvasReference.current);
   }, [setCanvasRef]);
 

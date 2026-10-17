@@ -1,3 +1,5 @@
+'use client';
+
 import { historyStore } from "../store/historyStore";
 import { canvasStore } from "../store/canvasStore";
 

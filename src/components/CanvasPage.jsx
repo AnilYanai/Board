@@ -1,7 +1,9 @@
+'use client';
+
 import styled from "styled-components";
-import ToolBar from "../components/ToolBar";
-import ActionBar from "../components/ActionBar";
-import CanvasBoard from "../components/CanvasBoard";
+import ToolBar from "./ToolBar";
+import ActionBar from "./ActionBar";
+import CanvasBoard from "./CanvasBoard";
 
 const MainPanel = styled.div`
   display: flex;
@@ -25,3 +27,4 @@ function CanvasPage() {
 }
 
 export default CanvasPage;
+

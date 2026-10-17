@@ -1,4 +1,6 @@
-import { useRef, useLayoutEffect, useCallback } from "react";
+'use client';
+
+import { useRef, useEffect, useLayoutEffect, useCallback } from "react";
 import { canvasStore } from "../store/canvasStore";
 import { historyStore } from "../store/historyStore";
 import { toolStore } from "../store/toolStore";
@@ -97,7 +99,10 @@ function useDrawingActions() {
     ctx.restore();
   }, [canvasRef]);
 
-  useLayoutEffect(() => {
+  const useIsomorphicLayoutEffect =
+    typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
+  useIsomorphicLayoutEffect(() => {
     if (!canvasRef) return;
     redrawCanvas();
   }, [triggerRender, canvasRef, redrawCanvas]);

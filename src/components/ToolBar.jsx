@@ -1,3 +1,5 @@
+'use client';
+
 import colorIcon from "../assets/colorIcon.svg";
 import eraserIcon from "../assets/eraserIcon.svg";
 import penImg from "../assets/pen.svg";
@@ -84,7 +86,7 @@ function ToolBar() {
           }}
           title="Select tool"
         >
-          <Img src={selectImg} alt="Select" />
+          <Img src={selectImg.src || selectImg} alt="Select" />
         </ToolButton>
 
         <ToolButton
@@ -95,7 +97,7 @@ function ToolBar() {
           }}
           title="Pan / Hand tool"
         >
-          <Img src={panImg} alt="Pan" />
+          <Img src={panImg.src || panImg} alt="Pan" />
         </ToolButton>
 
         <ToolButton
@@ -106,7 +108,7 @@ function ToolBar() {
           }}
           title="Pen tool"
         >
-          <Img src={penImg} alt="Pen" />
+          <Img src={penImg.src || penImg} alt="Pen" />
         </ToolButton>
 
         <ToolButton
@@ -117,13 +119,13 @@ function ToolBar() {
           }}
           title="Eraser tool"
         >
-          <Img src={eraserIcon} alt="Eraser" />
+          <Img src={eraserIcon.src || eraserIcon} alt="Eraser" />
         </ToolButton>
 
         <Popup
           trigger={
             <ToolButton title="Adjust brush size">
-              <Img src={adjustmentIcon} alt="Size Adjustment" />
+              <Img src={adjustmentIcon.src || adjustmentIcon} alt="Size Adjustment" />
             </ToolButton>
           }
           position="top center"
@@ -143,7 +145,7 @@ function ToolBar() {
         <Popup
           trigger={
             <ToolButton title="Pick color">
-              <Img src={colorIcon} alt="Color Picker" />
+              <Img src={colorIcon.src || colorIcon} alt="Color Picker" />
             </ToolButton>
           }
           position="top center"
