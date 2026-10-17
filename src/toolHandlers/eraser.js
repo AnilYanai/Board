@@ -1,32 +1,53 @@
 import { canvasStore } from "../store/canvasStore";
 import { historyStore } from "../store/historyStore";
+import { getEventCanvasPoint } from "../utils/coordinates";
 
 export const eraser = {
-    onMouseDown: (e ,getCurrentStroke,setCurrentStroke) => {
-        const getStrokes = historyStore.getState().getStrokes;
-        const setStrokes = historyStore.getState().setStrokes;
-        const forceUpdate = canvasStore.getState().forceUpdate; //to access the zustand methods
+  onMouseDown: (e) => {
+    const canvas = canvasStore.getState().getCanvasRef();
+    if (!canvas) return;
 
-        const { offsetX, offsetY } = e.nativeEvent;
-        const eraserRadius = 25;
+    const screenPoint = getEventCanvasPoint(e, canvas);
+    const { screenToWorld, getZoomLevel, forceUpdate } = canvasStore.getState();
+    const worldPoint = screenToWorld(screenPoint.x, screenPoint.y);
 
-        let strokeToDelete = getStrokes().find((stroke) => {
-            const isNear = stroke.points.some((point) => {
-                const distance = Math.hypot(point.x - offsetX, point.y - offsetY);
-                return distance <= eraserRadius; // Keep strokes farther than the eraser radius
-            });
-            return isNear && stroke.status==="active"; // Return the stroke if it's near the eraser
-        });
-        strokeToDelete.status = "inactive"; // Mark the old stroke as inactive
-        strokeToDelete = JSON.parse(JSON.stringify(strokeToDelete)); // Create a deep copy of the stroke to avoid mutating the original object
-        
-        if (strokeToDelete) {
-            strokeToDelete.status = "deleted";
-            setStrokes([...getStrokes(), strokeToDelete]);
-            forceUpdate(); 
-        }
-        else{
-            console.log("No strokes found to delete.");
-        }
+    const eraserRadius = 25 / getZoomLevel(); // World radius scaled with zoom
+
+    const strokes = historyStore.getState().getStrokes();
+    const setStrokes = historyStore.getState().setStrokes;
+
+    let strokeToDelete = strokes.find((stroke) => {
+      if (stroke.status !== "active") return false;
+      return stroke.points.some((point) => {
+        const distance = Math.hypot(point.x - worldPoint.x, point.y - worldPoint.y);
+        return distance <= eraserRadius;
+      });
+    });
+
+    if (strokeToDelete) {
+      strokeToDelete.status = "inactive";
+      const cloned = JSON.parse(JSON.stringify(strokeToDelete));
+      cloned.status = "deleted";
+      setStrokes([...strokes, cloned]);
+      forceUpdate();
     }
-}
+  },
+
+  onMouseMove: (e) => {
+    if (e.buttons === 1) {
+      eraser.onMouseDown(e);
+    }
+  },
+
+  onMouseUp: () => {},
+
+  onTouchStart: (e) => {
+    eraser.onMouseDown(e);
+  },
+
+  onTouchMove: (e) => {
+    eraser.onMouseDown(e);
+  },
+
+  onTouchEnd: () => {},
+};

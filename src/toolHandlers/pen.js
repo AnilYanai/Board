@@ -3,24 +3,20 @@ import { toolStore } from "../store/toolStore";
 import { historyStore } from "../store/historyStore";
 import { generateId } from "../utils/idGenerator";
 import { userStore } from "../store/userStore";
-
+import { getEventCanvasPoint } from "../utils/coordinates";
 
 export const pen = {
-
   onMouseDown: (e, getCurrentStroke, setCurrentStroke) => {
-    const getCanvasRef = canvasStore.getState().getCanvasRef;
+    const canvas = canvasStore.getState().getCanvasRef();
+    if (!canvas) return;
+
+    const screenPoint = getEventCanvasPoint(e, canvas);
+    const worldPoint = canvasStore.getState().screenToWorld(screenPoint.x, screenPoint.y);
+
     const getTool = toolStore.getState().getTool;
     const getToolSize = toolStore.getState().getToolSize;
     const getToolColor = toolStore.getState().getToolColor;
-    const getUser = userStore.getState().getUser; //to access the zustand methods
-
-    if (!getCanvasRef()) return;
-    const ctx = getCanvasRef().getContext("2d");
-
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-
-    const { offsetX, offsetY } = e.nativeEvent;
+    const getUser = userStore.getState().getUser;
 
     const newStroke = {
       id: generateId() + getUser(),
@@ -29,58 +25,96 @@ export const pen = {
       type: getTool(),
       color: getToolColor(),
       width: getToolSize(),
-      points: [{ x: offsetX, y: offsetY }],
+      points: [worldPoint],
     };
     setCurrentStroke(newStroke);
-    // console.log("newStroke inside onMouseDown", getCurrentStroke());
+
+    // Render dot immediately upon touch/click
+    const { panOffset, zoomLevel } = canvasStore.getState();
+    const ctx = canvas.getContext("2d");
+    ctx.save();
+    ctx.translate(panOffset.x, panOffset.y);
+    ctx.scale(zoomLevel, zoomLevel);
+    ctx.fillStyle = newStroke.color;
+    ctx.beginPath();
+    ctx.arc(worldPoint.x, worldPoint.y, newStroke.width / 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
   },
 
-  onMouseMove: (e, getCurrentStroke ,setCurrentStroke) => {
-    const getCanvasRef = canvasStore.getState().getCanvasRef;
-    const getToolSize = toolStore.getState().getToolSize; 
-    const getToolColor = toolStore.getState().getToolColor; 
+  onMouseMove: (e, getCurrentStroke) => {
+    if (e.buttons !== undefined && e.buttons !== 1) return;
+    const current = getCurrentStroke();
+    if (!current) return;
 
-    if (e.buttons !== 1) return;  // Check if the left mouse button is pressed
+    const canvas = canvasStore.getState().getCanvasRef();
+    if (!canvas) return;
 
-    const { offsetX, offsetY } = e.nativeEvent;
-    const newPoint = { x: offsetX, y: offsetY };
-   
-    if (getCurrentStroke()) {
-      getCurrentStroke().points.push(newPoint);
-    }
+    const screenPoint = getEventCanvasPoint(e, canvas);
+    const worldPoint = canvasStore.getState().screenToWorld(screenPoint.x, screenPoint.y);
+    current.points.push(worldPoint);
 
-    const ctx = getCanvasRef().getContext("2d");
-    ctx.strokeStyle = getToolColor();
-    ctx.lineWidth = getToolSize();
+    const { panOffset, zoomLevel } = canvasStore.getState();
+    const ctx = canvas.getContext("2d");
+    ctx.save();
+    ctx.translate(panOffset.x, panOffset.y);
+    ctx.scale(zoomLevel, zoomLevel);
+
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = current.color;
+    ctx.lineWidth = current.width;
+
     ctx.beginPath();
-    const points = getCurrentStroke().points;
-    
-    const len = points.length;
+    const len = current.points.length;
     if (len >= 2) {
-      ctx.moveTo(points[len - 2].x, points[len - 2].y);
-      ctx.lineTo(points[len - 1].x, points[len - 1].y);
+      ctx.moveTo(current.points[len - 2].x, current.points[len - 2].y);
+      ctx.lineTo(current.points[len - 1].x, current.points[len - 1].y);
       ctx.stroke();
     }
-    // console.log("curentStroke", getCurrentStroke());
+    ctx.restore();
   },
 
-  onMouseUp: ( e,getCurrentStroke, setCurrentStroke) => {
-    const setStrokes = historyStore.getState().setStrokes; 
-    const getStrokes = historyStore.getState().getStrokes; 
-    // console.log("getCurrentStroke", getCurrentStroke);
-    if (getCurrentStroke()) {
-      setStrokes([...getStrokes(), getCurrentStroke()]);
+  onMouseUp: (e, getCurrentStroke, setCurrentStroke) => {
+    const current = getCurrentStroke();
+    if (current) {
+      const getStrokes = historyStore.getState().getStrokes;
+      const setStrokes = historyStore.getState().setStrokes;
+      setStrokes([...getStrokes(), current]);
       setCurrentStroke(null);
     }
   },
 
-  drawStroke: (ctx, stroke) => {
-    ctx.strokeStyle = stroke.color;
-    ctx.lineWidth = stroke.width;
-    const points = stroke.points;
+  onTouchStart: (e, getCurrentStroke, setCurrentStroke) => {
+    pen.onMouseDown(e, getCurrentStroke, setCurrentStroke);
+  },
 
-    ctx.beginPath();
-    if (points.length > 0) {
+  onTouchMove: (e, getCurrentStroke, setCurrentStroke) => {
+    pen.onMouseMove(e, getCurrentStroke, setCurrentStroke);
+  },
+
+  onTouchEnd: (e, getCurrentStroke, setCurrentStroke) => {
+    pen.onMouseUp(e, getCurrentStroke, setCurrentStroke);
+  },
+
+  drawStroke: (ctx, stroke) => {
+    if (!stroke.points || stroke.points.length === 0) return;
+    ctx.save();
+
+    if (stroke.points.length === 1) {
+      // Single tap/click dot
+      const p = stroke.points[0];
+      ctx.fillStyle = stroke.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, stroke.width / 2, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.strokeStyle = stroke.color;
+      ctx.lineWidth = stroke.width;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+
+      ctx.beginPath();
       stroke.points.forEach((point, index) => {
         if (index === 0) {
           ctx.moveTo(point.x, point.y);
@@ -90,5 +124,7 @@ export const pen = {
       });
       ctx.stroke();
     }
-  }
+
+    ctx.restore();
+  },
 };

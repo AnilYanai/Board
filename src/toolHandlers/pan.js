@@ -1,60 +1,57 @@
 import { canvasStore } from "../store/canvasStore";
+import { getEventCanvasPoint } from "../utils/coordinates";
 
 export const pan = {
-    onMouseDown: (e, getCurrentStroke,setCurrentStroke) => {
-        const { clientX, clientY } = e.nativeEvent;
-        // Get the canvas wrapper directly from the Zustand store
-        const wrapper = canvasStore.getState().getCanvasRef().parentElement;
+  onMouseDown: (e, getCurrentStroke, setCurrentStroke) => {
+    const canvas = canvasStore.getState().getCanvasRef();
+    if (!canvas) return;
 
-        if (wrapper) {
-            // Store the initial scroll position when the mouse is pressed
-            setCurrentStroke({
-                lastX: clientX,
-                lastY: clientY,
-                scrollLeft: wrapper.scrollLeft,
-                scrollTop: wrapper.scrollTop,
-            });
+    const screenPoint = getEventCanvasPoint(e, canvas);
+    const panOffset = canvasStore.getState().getPanOffset();
 
-            // console.log("Initial pan - offset x,y:", offsetX, offsetY);
-        } else {
-            console.error("Wrapper element not found");
-        }
-    },
+    setCurrentStroke({
+      startX: screenPoint.x,
+      startY: screenPoint.y,
+      initialPanX: panOffset.x,
+      initialPanY: panOffset.y,
+    });
+  },
 
-    onMouseMove: (e, getCurrentStroke, setCurrentStroke) => {
-        if (e.buttons !== 1) return; // Check if the left mouse button is pressed
-        if (!getCurrentStroke().lastX || !getCurrentStroke().lastY) return; // Ensure we have a starting point
+  onMouseMove: (e, getCurrentStroke) => {
+    if (e.buttons !== undefined && e.buttons !== 1) return;
+    const current = getCurrentStroke();
+    if (!current) return;
 
-        const { clientX, clientY } = e.nativeEvent;
+    const canvas = canvasStore.getState().getCanvasRef();
+    if (!canvas) return;
 
-        // Get the canvas wrapper directly from the Zustand store
-        const wrapper = canvasStore.getState().getCanvasRef().parentElement;
+    const screenPoint = getEventCanvasPoint(e, canvas);
+    const deltaX = screenPoint.x - current.startX;
+    const deltaY = screenPoint.y - current.startY;
 
-        if (wrapper) {
-            // Calculate the delta between the previous mouse position and the current one
-            const deltaX = clientX - getCurrentStroke().lastX;
-            const deltaY = clientY - getCurrentStroke().lastY;
+    const setPanOffset = canvasStore.getState().setPanOffset;
+    const forceUpdate = canvasStore.getState().forceUpdate;
 
-            // Update the scroll position directly based on the delta
-            wrapper.scrollLeft = getCurrentStroke().scrollLeft - deltaX;
-            wrapper.scrollTop = getCurrentStroke().scrollTop - deltaY;
+    setPanOffset({
+      x: current.initialPanX + deltaX,
+      y: current.initialPanY + deltaY,
+    });
+    forceUpdate();
+  },
 
-            // Update the last mouse position
-            setCurrentStroke({
-                lastX: clientX,
-                lastY: clientY,
-                scrollLeft: wrapper.scrollLeft,
-                scrollTop: wrapper.scrollTop,
-            });
+  onMouseUp: (e, getCurrentStroke, setCurrentStroke) => {
+    setCurrentStroke(null);
+  },
 
-            // console.log("Moving pan - offset x,y:", offsetX, offsetY);
-        } else {
-            console.error("Wrapper element not found");
-        }
-    },
+  onTouchStart: (e, getCurrentStroke, setCurrentStroke) => {
+    pan.onMouseDown(e, getCurrentStroke, setCurrentStroke);
+  },
 
-    onMouseUp: (e,getCurrentStroke,setCurrentStroke) => {
-        setCurrentStroke(null); // Clear the stored mouse position
-        // console.log("Pan ended");
-    }
+  onTouchMove: (e, getCurrentStroke, setCurrentStroke) => {
+    pan.onMouseMove(e, getCurrentStroke, setCurrentStroke);
+  },
+
+  onTouchEnd: (e, getCurrentStroke, setCurrentStroke) => {
+    pan.onMouseUp(e, getCurrentStroke, setCurrentStroke);
+  },
 };

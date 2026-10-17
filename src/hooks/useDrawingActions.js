@@ -1,108 +1,158 @@
-import React, { useRef, useState, useEffect, useLayoutEffect } from "react";
+import { useRef, useLayoutEffect, useCallback } from "react";
 import { canvasStore } from "../store/canvasStore";
 import { historyStore } from "../store/historyStore";
 import { toolStore } from "../store/toolStore";
-import { TOOLS } from "../constants/tools";
+import { pen } from "../toolHandlers/pen";
+import { eraser } from "../toolHandlers/eraser";
+import { pan } from "../toolHandlers/pan";
+import { selection } from "../toolHandlers/selection";
+
+const toolRegistry = {
+  pen,
+  eraser,
+  pan,
+  select: selection,
+  selection,
+};
 
 function useDrawingActions() {
-  // console.log("useDrawingActions Hook");
-  const triggerRender = canvasStore(state => state.triggerRender); //this will cause re-render because it subscibes to the state changes in useffect
-  const canvasRef = canvasStore(state => state.canvasRef); //to access zustand state it will cause re-render of the component
+  const triggerRender = canvasStore((state) => state.triggerRender);
+  const canvasRef = canvasStore((state) => state.canvasRef);
 
-  // const [currentStroke, setCurrentStroke] = useState(null); //it will act like a common memory for mouse events
-  const currentStroke = useRef(null); //useRef will not cause re-render of the component
+  const currentStroke = useRef(null);
   const setCurrentStroke = (newStroke) => {
-    currentStroke.current = newStroke; // Update the current stroke reference
-  }
-  const getCurrentStroke = () => {
-    return currentStroke.current; // Get the current stroke reference
-  }
+    currentStroke.current = newStroke;
+  };
+  const getCurrentStroke = () => currentStroke.current;
 
-  const getStrokes = historyStore.getState().getStrokes;
-  const getToolHandlers = toolStore.getState().getToolHandlers;
-
-  const toolModule = import.meta.glob('../toolHandlers/*.js');
-  const alreadyLoadedTool = useRef(new Map()); // Track loaded tool handlers
-
-
-  useLayoutEffect(() => {
-    // console.log("inside useDrawingActions useEffect");
-    // console.log("canvasRef", canvasRef);
+  const redrawCanvas = useCallback(() => {
     if (!canvasRef) return;
-    redrawCanvas();
-  }, [triggerRender]);
-
-  const redrawCanvas = async () => {
     const ctx = canvasRef.getContext("2d");
+    const { panOffset, zoomLevel } = canvasStore.getState();
+
+    // Clear viewport
     ctx.clearRect(0, 0, canvasRef.width, canvasRef.height);
-    let strokes = getStrokes();
+
+    ctx.save();
+    // Apply camera transform to context
+    ctx.translate(panOffset.x, panOffset.y);
+    ctx.scale(zoomLevel, zoomLevel);
+
+    const strokes = historyStore.getState().getStrokes();
     const alreadyVisitedID = new Set();
 
+    // Viewport boundaries in world coordinates for virtual culling
+    const viewLeft = -panOffset.x / zoomLevel;
+    const viewTop = -panOffset.y / zoomLevel;
+    const viewRight = (-panOffset.x + canvasRef.width) / zoomLevel;
+    const viewBottom = (-panOffset.y + canvasRef.height) / zoomLevel;
+
+    const visibleStrokes = [];
+
+    // Traverse backwards to get the latest status for each stroke id
     for (let i = strokes.length - 1; i >= 0; i--) {
       const stroke = strokes[i];
-      
-      if (alreadyVisitedID.has(stroke.id)) continue; // Skip already visited strokes
-      alreadyVisitedID.add(stroke.id); 
-      
-      if (stroke.points.length === 0) continue; // Skip empty strokes
-      if (stroke.status === "deleted") continue; // Skip inactive strokes
+      if (alreadyVisitedID.has(stroke.id)) continue;
+      alreadyVisitedID.add(stroke.id);
 
-      if (stroke.status === "inactive" ) stroke.status="active"; //if all the above conditions are false then the stroke must be drawn in canvas anyway, so set it to active
-      
-      const toolHandler = await loadToolHandler(stroke.type); // Load the tool handler dynamically
+      if (stroke.status === "deleted") continue;
+      if (!stroke.points || stroke.points.length === 0) continue;
 
-      if (toolHandler?.drawStroke) {
-        toolHandler.drawStroke(ctx, stroke);
-      } else {
-        console.warn(`drawStroke not found for tool: ${stroke.type}`);
+      // Virtual viewport culling: check if stroke bounding box intersects the screen
+      let minX = Infinity,
+        minY = Infinity,
+        maxX = -Infinity,
+        maxY = -Infinity;
+
+      for (let p = 0; p < stroke.points.length; p++) {
+        const pt = stroke.points[p];
+        if (pt.x < minX) minX = pt.x;
+        if (pt.x > maxX) maxX = pt.x;
+        if (pt.y < minY) minY = pt.y;
+        if (pt.y > maxY) maxY = pt.y;
       }
 
-    };
-  };
+      const padding = (stroke.width || 5) * 2;
+      const isVisible = !(
+        maxX + padding < viewLeft ||
+        minX - padding > viewRight ||
+        maxY + padding < viewTop ||
+        minY - padding > viewBottom
+      );
 
-  const loadToolHandler = async (toolType) => {
-    if (alreadyLoadedTool.current.has(toolType)) {
-      return alreadyLoadedTool.current.get(toolType); // Return cached tool handler if already loaded
+      if (isVisible) {
+        // Place in unshift so older strokes are drawn first (correct z-order)
+        visibleStrokes.unshift(stroke);
+      }
     }
 
-    // console.log("Loaded tool", alreadyLoadedTool);
-    const toolPath = `../toolHandlers/${toolType}.js`;
-    try {
-      const toolModuleResult = await toolModule[toolPath]();
-      alreadyLoadedTool.current.set(toolType, toolModuleResult[toolType]); // Cache the loaded tool handler
-      return toolModuleResult[toolType]; // e.g. toolModule.pen
-    } catch (err) {
-      console.error(`Error loading tool module for type: ${toolType}`, err);
+    // Render visible strokes
+    for (const stroke of visibleStrokes) {
+      const toolHandler = toolRegistry[stroke.type];
+      if (toolHandler?.drawStroke) {
+        toolHandler.drawStroke(ctx, stroke);
+      }
     }
-  }
+
+    ctx.restore();
+  }, [canvasRef]);
+
+  useLayoutEffect(() => {
+    if (!canvasRef) return;
+    redrawCanvas();
+  }, [triggerRender, canvasRef, redrawCanvas]);
 
   const mouseDownHandler = (e) => {
-    const toolHandlers = getToolHandlers(); // Get the current tool handlers from the store
-    if (toolHandlers.onMouseDown) {
-      toolHandlers.onMouseDown(e, getCurrentStroke, setCurrentStroke); // Call the onMouseDown handler of the current tool
+    const toolHandlers = toolStore.getState().getToolHandlers();
+    if (toolHandlers?.onMouseDown) {
+      toolHandlers.onMouseDown(e, getCurrentStroke, setCurrentStroke);
     }
-  }
+  };
 
   const mouseMoveHandler = (e) => {
-    const toolHandlers = getToolHandlers(); // Get the current tool handlers from the store
-    if (toolHandlers.onMouseMove) {
-      toolHandlers.onMouseMove(e, getCurrentStroke, setCurrentStroke); // Call the onMouseMove handler of the current tool
+    const toolHandlers = toolStore.getState().getToolHandlers();
+    if (toolHandlers?.onMouseMove) {
+      toolHandlers.onMouseMove(e, getCurrentStroke, setCurrentStroke);
     }
-  }
+  };
 
   const mouseUpHandler = (e) => {
-    const toolHandlers = getToolHandlers(); // Get the current tool handlers from the store
-    if (toolHandlers.onMouseUp) {
-      toolHandlers.onMouseUp(e, getCurrentStroke, setCurrentStroke); // Call the onMouseUp handler of the current tool
+    const toolHandlers = toolStore.getState().getToolHandlers();
+    if (toolHandlers?.onMouseUp) {
+      toolHandlers.onMouseUp(e, getCurrentStroke, setCurrentStroke);
     }
-  }
+  };
 
+  const touchStartHandler = (e) => {
+    const toolHandlers = toolStore.getState().getToolHandlers();
+    if (toolHandlers?.onTouchStart) {
+      toolHandlers.onTouchStart(e, getCurrentStroke, setCurrentStroke);
+    }
+  };
+
+  const touchMoveHandler = (e) => {
+    const toolHandlers = toolStore.getState().getToolHandlers();
+    if (toolHandlers?.onTouchMove) {
+      toolHandlers.onTouchMove(e, getCurrentStroke, setCurrentStroke);
+    }
+  };
+
+  const touchEndHandler = (e) => {
+    const toolHandlers = toolStore.getState().getToolHandlers();
+    if (toolHandlers?.onTouchEnd) {
+      toolHandlers.onTouchEnd(e, getCurrentStroke, setCurrentStroke);
+    }
+  };
 
   return {
+    redrawCanvas,
     mouseDownHandler,
     mouseMoveHandler,
-    mouseUpHandler
+    mouseUpHandler,
+    touchStartHandler,
+    touchMoveHandler,
+    touchEndHandler,
   };
-};
+}
 
 export default useDrawingActions;

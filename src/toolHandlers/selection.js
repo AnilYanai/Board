@@ -1,74 +1,94 @@
 import { historyStore } from "../store/historyStore";
 import { canvasStore } from "../store/canvasStore";
+import { getEventCanvasPoint } from "../utils/coordinates";
 
 export const selection = {
-    onMouseDown: (e, getCurrentStroke, setCurrentStroke) => {
-        if (e.button !== 0) return; // Only execute if the left mouse button is pressed
-        const {offsetX, offsetY, shiftKey } = e.nativeEvent;
-        const getStrokes = historyStore.getState().getStrokes;
+  onMouseDown: (e, getCurrentStroke, setCurrentStroke) => {
+    if (e.button !== undefined && e.button !== 0) return;
+    const canvas = canvasStore.getState().getCanvasRef();
+    if (!canvas) return;
 
-        const selectionRadius = 25;
+    const screenPoint = getEventCanvasPoint(e, canvas);
+    const { screenToWorld, getZoomLevel } = canvasStore.getState();
+    const worldPoint = screenToWorld(screenPoint.x, screenPoint.y);
 
-        let selectedStroke = getStrokes().find((stroke) => {
-            const isNear = stroke.points.some((point) => {
-                const distance = Math.hypot(point.x - offsetX, point.y - offsetY);
-                return distance <= selectionRadius; // Keep strokes farther than the eraser radius
-            });
-            return isNear && stroke.status === "active"; // Return the stroke if it's near the eraser
-        });
+    const selectionRadius = 25 / getZoomLevel();
+    const strokes = historyStore.getState().getStrokes();
 
-        let newSelection;
-        if (selectedStroke) {
-            if (shiftKey) {
-                // console.log("Shift key pressed");
-                if (!getCurrentStroke()) {
-                    newSelection = [selectedStroke];
-                } else {
-                    // console.log("Current strokes:", getCurrentStroke().selectedStrokes);
-                    const alreadySelected = getCurrentStroke().selectedStrokes.find(
-                        (s) => s.id === selectedStroke.id
-                    );
-                    newSelection = alreadySelected ? getCurrentStroke().selectedStrokes : [...getCurrentStroke().selectedStrokes, selectedStroke];
-                }
-            } else {
-                newSelection = [selectedStroke];
-            }
-        }
+    const selectedStroke = strokes.find((stroke) => {
+      if (stroke.status !== "active") return false;
+      return stroke.points.some((point) => {
+        const distance = Math.hypot(point.x - worldPoint.x, point.y - worldPoint.y);
+        return distance <= selectionRadius;
+      });
+    });
 
-        // setCurrentStroke(newSelection); 
-        setCurrentStroke({
-            selectedStrokes: newSelection,
-            lastX: offsetX,
-            lastY: offsetY,
-          });
-        console.log("Current strokes:(in mouseDown)", getCurrentStroke());
-    },
+    const isShift = e.shiftKey || e.nativeEvent?.shiftKey;
+    let newSelection = [];
+    const current = getCurrentStroke();
 
-    onMouseMove: (e, getCurrentStroke, setCurrentStroke) => {
-        if(e.buttons !== 1) return; // Only execute if the left mouse button is pressed
-        const { offsetX, offsetY } = e.nativeEvent;
-        const deltaX = offsetX - getCurrentStroke().lastX;
-        const deltaY = offsetY - getCurrentStroke().lastY;
+    if (selectedStroke) {
+      if (isShift && current?.selectedStrokes) {
+        const alreadySelected = current.selectedStrokes.some((s) => s.id === selectedStroke.id);
+        newSelection = alreadySelected
+          ? current.selectedStrokes
+          : [...current.selectedStrokes, selectedStroke];
+      } else {
+        newSelection = [selectedStroke];
+      }
+    }
 
-        const forceUpdate = canvasStore.getState().forceUpdate;
-        getCurrentStroke().selectedStrokes?.forEach((stroke) => {
-            stroke.points.forEach((point) => {
-                point.x += deltaX;
-                point.y += deltaY;
-            });
-        });
-        setCurrentStroke({
-            ...getCurrentStroke(),
-            lastX: offsetX,
-            lastY: offsetY,
-        });
-        console.log("Current strokes(in mouseMovement):", getCurrentStroke());
-        forceUpdate(); // Trigger a re-render of the canvas
-    },
+    setCurrentStroke({
+      selectedStrokes: newSelection,
+      lastWorldX: worldPoint.x,
+      lastWorldY: worldPoint.y,
+    });
+  },
 
-    onMouseUp: (e, getCurrentStroke, setCurrentStroke) => {
-        
-    },
+  onMouseMove: (e, getCurrentStroke, setCurrentStroke) => {
+    if (e.buttons !== undefined && e.buttons !== 1) return;
+    const current = getCurrentStroke();
+    if (!current || !current.selectedStrokes || current.selectedStrokes.length === 0) return;
 
-    drawStroke: null
-}
+    const canvas = canvasStore.getState().getCanvasRef();
+    if (!canvas) return;
+
+    const screenPoint = getEventCanvasPoint(e, canvas);
+    const { screenToWorld, forceUpdate } = canvasStore.getState();
+    const worldPoint = screenToWorld(screenPoint.x, screenPoint.y);
+
+    const deltaX = worldPoint.x - current.lastWorldX;
+    const deltaY = worldPoint.y - current.lastWorldY;
+
+    current.selectedStrokes.forEach((stroke) => {
+      stroke.points.forEach((point) => {
+        point.x += deltaX;
+        point.y += deltaY;
+      });
+    });
+
+    setCurrentStroke({
+      ...current,
+      lastWorldX: worldPoint.x,
+      lastWorldY: worldPoint.y,
+    });
+
+    forceUpdate();
+  },
+
+  onMouseUp: () => {},
+
+  onTouchStart: (e, getCurrentStroke, setCurrentStroke) => {
+    selection.onMouseDown(e, getCurrentStroke, setCurrentStroke);
+  },
+
+  onTouchMove: (e, getCurrentStroke, setCurrentStroke) => {
+    selection.onMouseMove(e, getCurrentStroke, setCurrentStroke);
+  },
+
+  onTouchEnd: (e, getCurrentStroke, setCurrentStroke) => {
+    selection.onMouseUp(e, getCurrentStroke, setCurrentStroke);
+  },
+
+  drawStroke: null,
+};

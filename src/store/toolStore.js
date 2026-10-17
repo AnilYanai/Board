@@ -8,6 +8,9 @@ export const toolStore = create((set, get) => ({
         onMouseDown: null,
         onMouseMove: null,
         onMouseUp: null,
+        onTouchStart: null,
+        onTouchMove: null,
+        onTouchEnd: null,
     },
 
     //setter methods
@@ -21,6 +24,9 @@ export const toolStore = create((set, get) => ({
                 onMouseDown: handlers.onMouseDown,
                 onMouseMove: handlers.onMouseMove,
                 onMouseUp: handlers.onMouseUp,
+                onTouchStart: handlers.onTouchStart,
+                onTouchMove: handlers.onTouchMove,
+                onTouchEnd: handlers.onTouchEnd,
             },
         }),
 
